@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Recognition and Freshness Detection</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #c9ebce;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header {
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: #1d4ed8;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.2rem;
+      font-style: italic;
+      color: #555;
+    }
+
+    .upload-section {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    .upload-section input {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .button-primary {
+      background-color: #22c55e;
+      color: white;
+    }
+
+    .button-primary:hover {
+      background-color: #16a34a;
+    }
+
+    .button-secondary {
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    .button-secondary:hover {
+      background-color: #2563eb;
+    }
+
+    .loading {
+      margin-top: 10px;
+      color: #888;
+      font-size: 1rem;
+    }
+
+    .results {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    .results h2 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .results ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .results ul li {
+      font-size: 1rem;
+      margin-bottom: 5px;
+    }
+
+    .features {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .feature {
+      background: linear-gradient(to top right, #d9f99d, #6ee7b7);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .feature:hover {
+      transform: scale(1.05);
+    }
+
+    .feature h3 {
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+      color: #374151;
+    }
+
+    .feature p {
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <div class="header">
+      <h1>Product Recognition</h1>
+      <p>"Leverage AI to detect product freshness and recognize brands instantly."</p>
+    </div>
+
+    <!-- Folder Upload Section -->
+    <div class="upload-section">
+      <label for="folder-upload">Upload a Folder with Images</label>
+      <input type="file" id="folder-upload" webkitdirectory="true" directory="true" multiple />
+      <p id="selected-files" style="margin-top: 10px; color: #555;"></p>
+    </div>
+
+    <!-- Submit Button -->
+    <button id="submit-button" class="button button-primary">Submit for Detection</button>
+
+    <!-- Results Section -->
+    <div id="results" class="results" style="display: none;">
+      <h2>Detection Results</h2>
+      <ul id="results-list"></ul>
+    </div>
+
+    <!-- Download Button -->
+    <button id="download-button" class="button button-secondary" style="display: none;">Download Excel File</button>
+
+    <!-- Features Section -->
+    <div class="features">
+      <div class="feature">
+        <h3>Real-Time Detection</h3>
+        <p>Instantly analyze the freshness and quality of products with AI-powered models.</p>
+      </div>
+      <div class="feature">
+        <h3>Brand Recognition</h3>
+        <p>Our model accurately detects brand names and product types in images.</p>
+      </div>
+      <div class="feature">
+        <h3>Easy-to-Use</h3>
+        <p>Upload a folder and get instant results—simple, fast, and effective.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const folderInput = document.getElementById("folder-upload");
+    const submitButton = document.getElementById("submit-button");
+    const downloadButton = document.getElementById("download-button");
+    const resultsDiv = document.getElementById("results");
+    const resultsList = document.getElementById("results-list");
+    const selectedFilesText = document.getElementById("selected-files");
+
+    let folderFiles = [];
+
+    folderInput.addEventListener("change", (e) => {
+      folderFiles = Array.from(e.target.files);
+      resultsDiv.style.display = "none";
+      downloadButton.style.display = "none";
+      selectedFilesText.textContent = `${folderFiles.length} files selected.`;
+    });
+
+    submitButton.addEventListener("click", async () => {
+      if (folderFiles.length === 0) {
+        alert("Please upload a folder with images.");
+        return;
+      }
+
+      const formData = new FormData();
+      folderFiles.forEach(file => {
+        formData.append("images", file);
+      });
+
+      try {
+        const response = await fetch("http://localhost:5000/predict-folder", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          alert("Failed to process the images.");
+          return;
+        }
+
+        const data = await response.json();
+        resultsList.innerHTML = "";
+
+        if (data.length) {
+          data.forEach((result) => {
+            const listItem = document.createElement("li");
+            listItem.textContent = `Predicted Brand: ${result.predicted_brand}`;
+            resultsList.appendChild(listItem);
+          });
+          resultsDiv.style.display = "block";
+          downloadButton.style.display = "inline-block";
+        } else {
+          alert("No detections found in the response.");
+        }
+      } catch (error) {
+        alert("Failed to process the images. Please try again.");
+      }
+    });
+
+    downloadButton.addEventListener("click", async () => {
+      try {
+        const response = await fetch("http://localhost:5000/download-excel", {
+          method: "GET"
+        });
+
+        if (!response.ok) {
+          alert("Failed to download the file.");
+          return;
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "product_predictions.xlsx";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        alert("Failed to download the file. Please try again.");
+      }
+    });
+  </script>
+</body>
+</html>
